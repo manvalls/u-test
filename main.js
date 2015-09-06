@@ -121,7 +121,7 @@ Object.defineProperty(test,'running',{get: function(){
   return pending.length > 0;
 }});
 
-if(process) process.on('exit',function(){
+if(process) process.on('beforeExit',function(){
   var i,e,p;
 
   if(pending.length > 0){

@@ -57,6 +57,7 @@ module.exports = function(file,command){
 
     switch(req.url){
       case '/':
+        res.setHeader('content-type','text/html;charset=utf-8');
         res.end(`
         <!DOCTYPE HTML>
         <html>
@@ -70,6 +71,7 @@ module.exports = function(file,command){
         `);
         break;
       case '/script.js':
+        res.setHeader('content-type','application/javascript;charset=utf-8');
         res.write(bcore);
         br.bundle().pipe(res);
         break;
@@ -86,6 +88,7 @@ module.exports = function(file,command){
           print(data[0]);
         }
 
+        res.setHeader('content-type','text/plain');
         res.end();
         break;
     }

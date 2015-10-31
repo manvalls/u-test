@@ -5,7 +5,7 @@ var browserify = require('browserify'),
     cp = require('child_process'),
     fs = require('fs'),
 
-    bcore = fs.readFileSync(require.resolve('babel-core/browser-polyfill.js')),
+    bcore = fs.readFileSync(require.resolve('babel-polyfill/dist/polyfill.js')),
     print = require('./main/print.js'),
     working = false,
     queue = [];

@@ -1,9 +1,11 @@
 var browserify = require('browserify'),
     istanbulTF = require('browserify-istanbul'),
+    babelify = require('babelify'),
     http = require('http'),
     cp = require('child_process'),
     fs = require('fs'),
 
+    bcore = fs.readFileSync(require.resolve('babel-core/browser-polyfill.js')),
     print = require('./main/print.js'),
     working = false,
     queue = [];
@@ -22,9 +24,14 @@ module.exports = function(file,command){
 
   br.transform(istanbulTF);
   server.listen(0,function(){
-    child = cp.spawn(command || 'google-chrome-stable',[`http://127.0.0.1:${server.address().port}/`]);
+    child = cp.spawn(command || 'firefox',[`http://127.0.0.1:${server.address().port}/`]);
     child.on('close',onceClosed);
   });
+
+  br.transform(babelify.configure({
+    blacklist: ['strict'],
+    nonStandard: false
+  }),{global: true});
 
   br.add(file);
 
@@ -46,6 +53,7 @@ module.exports = function(file,command){
         `);
         break;
       case '/script.js':
+        res.write(bcore);
         br.bundle().pipe(res);
         break;
       case '/result':

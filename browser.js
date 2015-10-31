@@ -45,7 +45,7 @@ module.exports = function(file,command){
 
   br.transform(istanbulTF);
   server.listen(0,function(){
-    child = cp.spawn(command || 'firefox',[`http://127.0.0.1:${server.address().port}/`]);
+    child = cp.spawn(command || 'firefox',['--new-window',`http://127.0.0.1:${server.address().port}/`]);
     child.on('close',onceClosed);
   });
 
@@ -80,7 +80,7 @@ module.exports = function(file,command){
 
         if(data == 0){
           working = false;
-          child.kill('SIGTERM');
+          child.kill('SIGKILL');
           server.close();
         }else if(data instanceof Array){
           fs.writeFile( `./coverage/coverage-${Math.random().toString(10).slice(2)}.json`,

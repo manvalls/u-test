@@ -8,7 +8,7 @@ var browserify = require('browserify'),
     working = false,
     queue = [];
 
-module.exports = function(file){
+module.exports = function(file,command){
   var br = browserify(),
       server = http.createServer(),
       child;
@@ -22,7 +22,7 @@ module.exports = function(file){
 
   br.transform(istanbulTF);
   server.listen(0,function(){
-    child = cp.spawn('google-chrome-stable',[`http://127.0.0.1:${server.address().port}/`]);
+    child = cp.spawn(command || 'google-chrome-stable',[`http://127.0.0.1:${server.address().port}/`]);
     child.on('close',onceClosed);
   });
 

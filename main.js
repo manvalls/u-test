@@ -135,6 +135,29 @@ module.exports = test = walk.wrap(function*(info,generator,args,thisArg){
   return ret;
 });
 
+test.log = function(str){
+  str = '# ' + str.replace(/\n/g,'\n# ');
+  console.log(str);
+  if(global.__U_TEST_REMOTE__ && global.XMLHttpRequest){
+    xhr = new XMLHttpRequest();
+    xhr.open('GET',__U_TEST_REMOTE__,true);
+    xhr.setRequestHeader('u-test-data',JSON.stringify(str));
+    xhr.send();
+  }
+};
+
+Object.defineProperty(Error.prototype,'toJSON',{
+  value: function(){
+    return {
+      message: this.message,
+      name: this.name,
+      stack: this.stack
+    };
+  },
+  configurable: true,
+  writable: true
+});
+
 function notifyRemote(){
   xhr = new XMLHttpRequest();
   xhr.open('GET',__U_TEST_REMOTE__,true);

@@ -80,13 +80,13 @@ module.exports = function(file,command){
 
         if(data == 0){
           working = false;
-          child.kill('SIGKILL');
+          child.disconnect();
           server.close();
         }else if(data instanceof Array){
           fs.writeFile( `./coverage/coverage-${Math.random().toString(10).slice(2)}.json`,
                         JSON.stringify(data[1]),function(){});
           print(data[0]);
-        }
+        }else if(typeof data == 'string') console.log(string);
 
         res.setHeader('content-type','text/plain');
         res.end();

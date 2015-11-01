@@ -25,7 +25,8 @@ function getCompleted(node,options){
 }
 
 function get(node,offset,options){
-  var txt = offset,i;
+  var txt = offset,
+      stack,i;
 
   offset = '  ' + offset;
   txt += getCompleted(node,options) + node.info;
@@ -38,16 +39,21 @@ function get(node,offset,options){
 
     if(node.children.length == 0){
       if(options.showErrors){
-        txt += offset +
-          (node.error.stack?
-            (node.error.stack.charAt(0) != '@'?
-              node.error.stack.replace(/\n/g,syntax.getNL(options.syntax) + offset):
-              ((node.error || '') + '').replace(/\n/g,syntax.getNL(options.syntax) + offset) + syntax.getNL(options.syntax) + offset + '    ' +
-              node.error.stack.replace(/\n/g,syntax.getNL(options.syntax) + offset + '    ')
-            ):
-            ((node.error || '') + '').replace(/\n/g,syntax.getNL(options.syntax) + offset)
-          )
-           + syntax.getNL(options.syntax);
+        stack = node.error.stack;
+
+        if(stack){
+          if(node.error.message){
+            stack = stack.replace(node.error.name + ': ' + node.error.message + '\n','');
+            stack = node.error.name + ': ' + node.error.message + '\n  ' + stack.replace(/\n\s*/g,'\n  ');
+          }else{
+            stack = stack.replace(node.error.name + '\n','');
+            stack = node.error.name + '\n  ' + stack.replace(/\n\s*/g,'\n  ');
+          }
+
+          stack = stack.replace(/\s*$/,'');
+          txt += offset + stack.replace(/\n/g,syntax.getNL(options.syntax) + offset) + syntax.getNL(options.syntax);
+        }else txt += offset + (node.error+'').replace(/\n/g,syntax.getNL(options.syntax) + offset);
+
       }
     }else for(i = 0;i < node.children.length;i++) txt += get(node.children[i],offset,options);
   }

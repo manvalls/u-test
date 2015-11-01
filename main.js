@@ -80,7 +80,6 @@ Node.prototype.start = function(){
   }
 
   pending.push(this);
-  __U_TEST_REMAINING__++;
 };
 
 Node.prototype.end = function(){
@@ -91,7 +90,6 @@ Node.prototype.end = function(){
 
   i = pending.indexOf(this);
   pending.splice(i,1);
-  __U_TEST_REMAINING__--;
 
   if(this.parent){
     if(--this.parent.pending == 0) this.parent.set('done');
@@ -110,6 +108,7 @@ module.exports = test = walk.wrap(function*(info,generator,args,thisArg){
     break;
   }
 
+  if(!node.parent) __U_TEST_REMAINING__++;
   node.start();
 
   try{ ret = yield walk.trace(node,generator,args || [],thisArg || this); }
@@ -123,10 +122,10 @@ module.exports = test = walk.wrap(function*(info,generator,args,thisArg){
   if(!node.parent){
     if(global.__U_TEST_REMOTE__ && global.XMLHttpRequest){
       xhr = new XMLHttpRequest();
-      xhr.open('GET',__U_TEST_REMOTE__,true);
-      xhr.setRequestHeader('u-test-data',JSON.stringify([node,__coverage__]));
-      xhr.send();
-      setTimeout(notifyRemote,0);
+      xhr.onload = notifyRemote;
+      xhr.open('POST',__U_TEST_REMOTE__,true);
+      xhr.setRequestHeader('Content-Type','application/json');
+      xhr.send(JSON.stringify([node,__coverage__]));
     }
 
     print(node);
@@ -140,9 +139,9 @@ test.log = function(str){
   console.log(str);
   if(global.__U_TEST_REMOTE__ && global.XMLHttpRequest){
     xhr = new XMLHttpRequest();
-    xhr.open('GET',__U_TEST_REMOTE__,true);
-    xhr.setRequestHeader('u-test-data',JSON.stringify(str));
-    xhr.send();
+    xhr.open('POST',__U_TEST_REMOTE__,true);
+    xhr.setRequestHeader('Content-Type','application/json');
+    xhr.send(JSON.stringify(str));
   }
 };
 
@@ -159,10 +158,11 @@ Object.defineProperty(Error.prototype,'toJSON',{
 });
 
 function notifyRemote(){
+  __U_TEST_REMAINING__--;
   xhr = new XMLHttpRequest();
-  xhr.open('GET',__U_TEST_REMOTE__,true);
-  xhr.setRequestHeader('u-test-data',__U_TEST_REMAINING__ + '');
-  xhr.send();
+  xhr.open('POST',__U_TEST_REMOTE__,true);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.send(__U_TEST_REMAINING__ + '');
 }
 
 print = require('./main/print.js');

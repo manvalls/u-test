@@ -1,5 +1,6 @@
 var browserify = require('browserify'),
     istanbulTF = require('browserify-istanbul'),
+    Yielded = require('y-resolver').Yielded,
     babelify = require('babelify'),
     babelOpts = {plugins: [
       require("babel-plugin-transform-es2015-template-literals"),
@@ -44,16 +45,24 @@ module.exports = function(file,command){
   working = true;
 
   br.transform(istanbulTF);
-  server.listen(0,function(){
-    child = cp.spawn(command || 'firefox',['--new-window',`http://127.0.0.1:${server.address().port}/`]);
-    child.on('close',onceClosed);
+
+  if(!command) cp.exec('rm -R ~/.mozilla',function(){
+    cp.exec('firefox -createProfile test',function(){
+      server.listen(0,function(){
+        child = cp.spawn('firefox',[`http://127.0.0.1:${server.address().port}/`]);
+        child.on('close',onceClosed);
+      });
+    });
   });
+  else{
+    child = cp.spawn(command,[`http://127.0.0.1:${server.address().port}/`]);
+    child.on('close',onceClosed);
+  }
 
   br.transform(babelify.configure(babelOpts),{global: true});
   br.add(file);
 
   server.on('request',function(req,res){
-    var data,collector;
 
     switch(req.url){
       case '/':
@@ -76,20 +85,24 @@ module.exports = function(file,command){
         br.bundle().pipe(res);
         break;
       case '/result':
-        data = JSON.parse(req.headers['u-test-data']);
 
-        if(data == 0){
-          working = false;
-          child.kill();
-          server.close();
-        }else if(data instanceof Array){
-          fs.writeFile( `./coverage/coverage-${Math.random().toString(10).slice(2)}.json`,
-                        JSON.stringify(data[1]),function(){});
-          print(data[0]);
-        }else if(typeof data == 'string') console.log(string);
+        Yielded.get(req).then(function(data){
+          data = JSON.parse(data);
 
-        res.setHeader('content-type','text/plain');
-        res.end();
+          if(data == 0){
+            working = false;
+            child.kill('SIGTERM');
+            server.close();
+          }else if(data instanceof Array){
+            fs.writeFile( `./coverage/coverage-${Math.random().toString(10).slice(2)}.json`,
+                          JSON.stringify(data[1]),function(){});
+            print(data[0]);
+          }else if(typeof data == 'string') console.log(data);
+
+          res.setHeader('content-type','text/plain');
+          res.end();
+        });
+
         break;
     }
 

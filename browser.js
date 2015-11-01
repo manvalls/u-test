@@ -80,7 +80,7 @@ module.exports = function(file,command){
 
         if(data == 0){
           working = false;
-          child.disconnect();
+          child.kill();
           server.close();
         }else if(data instanceof Array){
           fs.writeFile( `./coverage/coverage-${Math.random().toString(10).slice(2)}.json`,

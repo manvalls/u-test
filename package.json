@@ -1,6 +1,6 @@
 {
   "name": "u-test",
-  "version": "2.1.5",
+  "version": "2.2.0",
   "description": "Testing framework",
   "main": "main.js",
   "dependencies": {

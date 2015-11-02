@@ -20,8 +20,8 @@ var browserify = require('browserify'),
       require("babel-plugin-transform-es2015-parameters"),
       require("babel-plugin-transform-es2015-destructuring"),
       require("babel-plugin-transform-es2015-block-scoping"),
-      require("babel-plugin-transform-es2015-typeof-symbol"),
-      [require("babel-plugin-transform-regenerator"), { async: false, asyncGenerators: false }]
+      //[require("babel-plugin-transform-regenerator"), { async: false, asyncGenerators: false }],
+      require("babel-plugin-transform-es2015-typeof-symbol")
     ]},
     http = require('http'),
     cp = require('child_process'),

@@ -1,41 +1,20 @@
 var browserify = require('browserify'),
     istanbulTF = require('browserify-istanbul'),
     Yielded = require('y-resolver').Yielded,
-    babelify = require('babelify'),
-    babelOpts = {plugins: [
-      require("babel-plugin-transform-es2015-template-literals"),
-      require("babel-plugin-transform-es2015-literals"),
-      require("babel-plugin-transform-es2015-function-name"),
-      require("babel-plugin-transform-es2015-arrow-functions"),
-      require("babel-plugin-transform-es2015-block-scoped-functions"),
-      require("babel-plugin-transform-es2015-classes"),
-      require("babel-plugin-transform-es2015-object-super"),
-      require("babel-plugin-transform-es2015-shorthand-properties"),
-      require("babel-plugin-transform-es2015-computed-properties"),
-      require("babel-plugin-transform-es2015-for-of"),
-      require("babel-plugin-transform-es2015-sticky-regex"),
-      require("babel-plugin-transform-es2015-unicode-regex"),
-      require("babel-plugin-transform-es2015-constants"),
-      require("babel-plugin-transform-es2015-spread"),
-      require("babel-plugin-transform-es2015-parameters"),
-      require("babel-plugin-transform-es2015-destructuring"),
-      require("babel-plugin-transform-es2015-block-scoping"),
-      //[require("babel-plugin-transform-regenerator"), { async: false, asyncGenerators: false }],
-      require("babel-plugin-transform-es2015-typeof-symbol")
-    ]},
+    rand = require('u-rand'),
     http = require('http'),
     cp = require('child_process'),
     fs = require('fs'),
+    os = require('os'),
+    path = require('path'),
 
-    bcore = fs.readFileSync(require.resolve('babel-polyfill/dist/polyfill.js')),
     print = require('./main/print.js'),
     working = false,
     queue = [];
 
 module.exports = function(file,command){
   var br = browserify(),
-      server = http.createServer(),
-      child;
+      server = http.createServer();
 
   if(working){
     queue.push(file);
@@ -43,72 +22,72 @@ module.exports = function(file,command){
   }
 
   working = true;
-
   br.transform(istanbulTF);
-
-  if(!command) cp.exec('rm -R ~/.mozilla',function(){
-    cp.exec('firefox -createProfile test',function(){
-      server.listen(0,function(){
-        child = cp.spawn('firefox',[`http://127.0.0.1:${server.address().port}/`]);
-        child.on('close',onceClosed);
-      });
-    });
-  });
-  else{
-    child = cp.spawn(command,[`http://127.0.0.1:${server.address().port}/`]);
-    child.on('close',onceClosed);
-  }
-
-  br.transform(babelify.configure(babelOpts),{global: true});
   br.add(file);
 
-  server.on('request',function(req,res){
-
-    switch(req.url){
-      case '/':
-        res.setHeader('content-type','text/html;charset=utf-8');
-        res.end(`
-        <!DOCTYPE HTML>
-        <html>
-        <head>
-        </head>
-        <body>
-        <script>__U_TEST_REMOTE__='http://127.0.0.1:${server.address().port}/result';</script>
-        <script src="/script.js"></script>
-        </body>
-        </html>
-        `);
-        break;
-      case '/script.js':
-        res.setHeader('content-type','application/javascript;charset=utf-8');
-        res.write(bcore);
-        br.bundle().pipe(res);
-        break;
-      case '/result':
-
-        Yielded.get(req).then(function(data){
-          data = JSON.parse(data);
-
-          if(data == 0){
-            working = false;
-            child.kill('SIGTERM');
-            server.close();
-          }else if(data instanceof Array){
-            fs.writeFile( `./coverage/coverage-${Math.random().toString(10).slice(2)}.json`,
-                          JSON.stringify(data[1]),function(){});
-            print(data[0]);
-          }else if(typeof data == 'string') console.log(data);
-
-          res.setHeader('content-type','text/plain');
-          res.end();
-        });
-
-        break;
-    }
-
-  });
-
+  server.br = br;
+  server.command = command;
+  server.on('request',onRequest);
+  server.once('listening',bindChild);
+  server.listen(0);
 };
+
+function bindChild(){
+
+  if(!this.command) this.child = cp.spawn('google-chrome',[
+    `--user-data-dir=${path.resolve(os.tmpDir(),rand.unique())}`,
+    '--no-first-run',
+    `http://127.0.0.1:${this.address().port}/`
+  ]);
+
+  else this.child = cp.spawn(this.command,[`http://127.0.0.1:${this.address().port}/`]);
+  this.child.on('close',onceClosed);
+}
+
+function onRequest(req,res){
+  
+  switch(req.url){
+    case '/':
+      res.setHeader('content-type','text/html;charset=utf-8');
+      res.end(`
+      <!DOCTYPE HTML>
+      <html>
+      <head>
+      </head>
+      <body>
+      <script>__U_TEST_REMOTE__='http://127.0.0.1:${this.address().port}/result';</script>
+      <script src="/script.js"></script>
+      </body>
+      </html>
+      `);
+      break;
+    case '/script.js':
+      res.setHeader('content-type','application/javascript;charset=utf-8');
+      this.br.bundle().pipe(res);
+      break;
+    case '/result':
+
+      Yielded.get(req).then(data => {
+        data = JSON.parse(data);
+
+        if(data == 0){
+          working = false;
+          this.child.kill('SIGTERM');
+          this.close();
+        }else if(data instanceof Array){
+          fs.writeFile( `./coverage/coverage-${rand.unique()}.json`,
+                        JSON.stringify(data[1]),function(){});
+          print(data[0]);
+        }else if(typeof data == 'string') console.log(data);
+
+        res.setHeader('content-type','text/plain');
+        res.end();
+      });
+
+      break;
+  }
+
+}
 
 function onceClosed(){
   if(queue.length) module.exports(queue.shift());

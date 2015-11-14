@@ -45,7 +45,7 @@ function bindChild(){
 }
 
 function onRequest(req,res){
-  
+
   switch(req.url){
     case '/':
       res.setHeader('content-type','text/html;charset=utf-8');
@@ -66,27 +66,30 @@ function onRequest(req,res){
       this.br.bundle().pipe(res);
       break;
     case '/result':
-
-      Yielded.get(req).then(data => {
-        data = JSON.parse(data);
-
-        if(data == 0){
-          working = false;
-          this.child.kill('SIGTERM');
-          this.close();
-        }else if(data instanceof Array){
-          fs.writeFile( `./coverage/coverage-${rand.unique()}.json`,
-                        JSON.stringify(data[1]),function(){});
-          print(data[0]);
-        }else if(typeof data == 'string') console.log(data);
-
-        res.setHeader('content-type','text/plain');
-        res.end();
-      });
-
+      Yielded.get(req).listen(handleResult,[this,res]);
       break;
   }
 
+}
+
+function handleResult(server,res){
+  var data;
+
+  if(this.rejected) return;
+  data = JSON.parse(this.value);
+
+  if(data == 0){
+    working = false;
+    server.child.kill('SIGTERM');
+    server.close();
+  }else if(data instanceof Array){
+    fs.writeFile( `./coverage/coverage-${rand.unique()}.json`,
+                  JSON.stringify(data[1]),function(){});
+    print(data[0]);
+  }else if(typeof data == 'string') console.log(data);
+
+  res.setHeader('content-type','text/plain');
+  res.end();
 }
 
 function onceClosed(){

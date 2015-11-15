@@ -62,7 +62,7 @@ walk(function*(){
   yield exec(`"${istanbul}" report --root ./coverage/ text-summary lcov --color`);
 
   if(process.env.COVERALLS_REPO_TOKEN) yield exec(`"${coveralls}"`,{
-    input: cp.readFileSync('./coverage/lcov.info')
+    input: fs.readFileSync('./coverage/lcov.info')
   });
 
   if(process.argv.indexOf('--keep') == -1) rmDir(fs.readdirSync('./coverage'),'./coverage');

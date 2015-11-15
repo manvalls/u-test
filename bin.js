@@ -1,10 +1,10 @@
 #! /usr/bin/env node
-var coveralls = require.resolve('coveralls/bin/coveralls'),
-    istanbul = require.resolve('istanbul/lib/cli'),
+var istanbul = require.resolve('istanbul/lib/cli'),
     browser = require.resolve('./bin/browser-runner.js'),
 
     walk = require('y-walk'),
     Resolver = require('y-resolver'),
+    coverallsHandleInput = require('coveralls/lib/handleInput.js'),
 
     cp = require('child_process'),
     fs = require('fs'),
@@ -61,9 +61,8 @@ walk(function*(){
   yield testDir(fs.readdirSync('./test/'),'./test/');
   yield exec(`"${istanbul}" report --root ./coverage/ text-summary lcov --color`);
 
-  if(process.env.COVERALLS_REPO_TOKEN) yield exec(`"${coveralls}"`,{
-    input: fs.readFileSync('./coverage/lcov.info')
-  });
+  if(process.env.COVERALLS_REPO_TOKEN)
+  coverallsHandleInput(fs.readFileSync('./coverage/lcov.info').toString());
 
   if(process.argv.indexOf('--keep') == -1) rmDir(fs.readdirSync('./coverage'),'./coverage');
 });

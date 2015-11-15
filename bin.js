@@ -4,6 +4,7 @@ var istanbul = require.resolve('istanbul/lib/cli'),
 
     walk = require('y-walk'),
     Resolver = require('y-resolver'),
+    Cb = require('y-callback/node'),
     coverallsHandleInput = require('coveralls/lib/handleInput.js'),
 
     cp = require('child_process'),
@@ -57,12 +58,16 @@ function rmDir(files,folder){
 }
 
 walk(function*(){
+  var cb;
+
   try{ rmDir(fs.readdirSync('./coverage'),'./coverage'); }catch(e){}
   yield testDir(fs.readdirSync('./test/'),'./test/');
   yield exec(`"${istanbul}" report --root ./coverage/ text-summary lcov --color`);
 
-  if(process.env.COVERALLS_REPO_TOKEN)
-  coverallsHandleInput(fs.readFileSync('./coverage/lcov.info').toString());
+  if(process.env.COVERALLS_REPO_TOKEN){
+    coverallsHandleInput(fs.readFileSync('./coverage/lcov.info').toString(),cb = Cb());
+    yield cb;
+  }
 
   if(process.argv.indexOf('--keep') == -1) rmDir(fs.readdirSync('./coverage'),'./coverage');
 });

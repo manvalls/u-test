@@ -37,14 +37,14 @@ function get(node,offset,options){
   }else{
     txt += ' ' + getNok(options) + syntax.getNL(options.syntax);
 
-    if(node.children.length == 0){
+    if(!node.errored){
       if(options.showErrors){
         stack = node.error.stack;
 
         if(stack){
           if(node.error.message){
-            stack = stack.replace(node.error.name + ': ' + node.error.message + '\n','');
-            stack = node.error.name + ': ' + node.error.message + '\n  ' + stack.replace(/\n\s*/g,'\n  ');
+            stack = stack.replace(node.error.name + ': ' + node.error.message,'');
+            stack = node.error.name + ': ' + node.error.message + stack.replace(/\n\s*/g,'\n  ');
           }else{
             stack = stack.replace(node.error.name + '\n','');
             stack = node.error.name + '\n  ' + stack.replace(/\n\s*/g,'\n  ');

@@ -28,6 +28,7 @@ function Node(info){
   this.parent = null;
 
   this.pending = 0;
+  this.errored = 0;
   this.error = null;
 
   this.t = null;
@@ -49,7 +50,10 @@ Node.prototype.resolve = function(error){
   code = 1;
   this.error = error;
 
-  if(this.parent) this.parent.resolve(error);
+  if(this.parent){
+    this.parent.errored++;
+    this.parent.resolve(error);
+  }
 }
 
 Node.prototype.toString = function(){
@@ -179,10 +183,8 @@ if(process) process.on('beforeExit',function(){
 
     p = pending.slice();
     for(i = 0;i < p.length;i++){
-      if(!p[i].children.length){
-        p[i].resolve(e);
-        p[i].end();
-      }
+      p[i].resolve(e);
+      p[i].end();
     }
 
     print.check();

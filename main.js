@@ -76,6 +76,8 @@ function getTime(){
 Node.prototype.start = function(){
   this.t0 = getTime();
 
+  if(this.is('started')) return;
+  this.set('started');
   this.set('done');
 
   if(this.parent){
@@ -88,6 +90,9 @@ Node.prototype.start = function(){
 
 Node.prototype.end = function(){
   var i;
+
+  if(this.is('finished')) return;
+  this.set('finished');
 
   this.t1 = getTime();
   this.t = this.t1 - this.t0;
@@ -176,17 +181,16 @@ Object.defineProperty(test,'running',{get: function(){
 }});
 
 if(process) process.on('beforeExit',function(){
-  var i,e,p;
+  var i,p;
+
+  function endMe(ev,d){
+    this.resolve('Unfinished test');
+    this.end();
+  }
 
   if(pending.length > 0){
-    e = new Error('Unfinished test');
-
     p = pending.slice();
-    for(i = 0;i < p.length;i++){
-      p[i].resolve(e);
-      p[i].end();
-    }
-
+    for(i = 0;i < p.length;i++) p[i].once('done',endMe);
     print.check();
   }
 

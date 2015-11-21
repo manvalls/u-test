@@ -52,7 +52,7 @@ function get(node,offset,options){
 
           stack = stack.replace(/\s*$/,'');
           txt += offset + stack.replace(/\n/g,syntax.getNL(options.syntax) + offset) + syntax.getNL(options.syntax);
-        }else txt += offset + (node.error+'').replace(/\n/g,syntax.getNL(options.syntax) + offset);
+        }else txt += offset + (node.error+'').replace(/\n/g,syntax.getNL(options.syntax) + offset) + syntax.getNL(options.syntax);
 
       }
     }else for(i = 0;i < node.children.length;i++) txt += get(node.children[i],offset,options);

@@ -71,4 +71,5 @@ walk(function*(){
   }
 
   if(process.argv.indexOf('--keep') == -1) rmDir(fs.readdirSync('./coverage'),'./coverage');
+  process.exit(exitCode);
 });

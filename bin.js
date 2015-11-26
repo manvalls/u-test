@@ -62,6 +62,9 @@ walk(function*(){
   var cb;
 
   try{ rmDir(fs.readdirSync('./coverage'),'./coverage'); }catch(e){}
+  fs.mkdir('./coverage',cb = Cb());
+  yield cb;
+
   yield testDir(fs.readdirSync('./test/'),'./test/');
   yield exec(`"${istanbul}" report --root ./coverage/ text-summary lcov --color`);
 

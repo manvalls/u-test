@@ -120,7 +120,10 @@ module.exports = test = walk.wrap(function*(info,generator,args,thisArg){
   if(!node.parent) __U_TEST_REMAINING__++;
   node.start();
 
-  try{ ret = yield walk.trace(node,generator,args || [],thisArg || this); }
+  try{ ret = yield Resolver.race([
+    walk.trace(node,generator,args || [],thisArg || this),
+    node.until('finished')
+  ]); }
   catch(e){ error = e; }
 
   yield node.until('done');

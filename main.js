@@ -7,6 +7,7 @@ var walk = require('y-walk'),
     performance = global.performance,
     code = 0,
     pending = [],
+    done = new Resolver(),
     test;
 
 global.__U_TEST_REMAINING__ = 0;
@@ -132,6 +133,8 @@ module.exports = test = walk.wrap(function*(info,generator,args,thisArg){
   node.end();
 
   if(!node.parent){
+    __U_TEST_REMAINING__--;
+
     if(global.__U_TEST_REMOTE__ && global.XMLHttpRequest){
       xhr = new XMLHttpRequest();
       xhr.onload = notifyRemote;
@@ -140,11 +143,14 @@ module.exports = test = walk.wrap(function*(info,generator,args,thisArg){
       xhr.send(JSON.stringify([node,window.__coverage__]));
     }
 
+    setTimeout(resolveDone,0);
     print(node);
   }
 
   return ret;
 });
+
+test.done = done.yielded;
 
 test.log = function(str){
   str = '# ' + str.replace(/\n/g,'\n# ');
@@ -170,11 +176,14 @@ Object.defineProperty(Error.prototype,'toJSON',{
 });
 
 function notifyRemote(){
-  __U_TEST_REMAINING__--;
   xhr = new XMLHttpRequest();
   xhr.open('POST',__U_TEST_REMOTE__,true);
   xhr.setRequestHeader('Content-Type','application/json');
   xhr.send(__U_TEST_REMAINING__ + '');
+}
+
+function resolveDone(){
+  if(!__U_TEST_REMAINING__) done.accept();
 }
 
 print = require('./main/print.js');

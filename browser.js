@@ -83,8 +83,10 @@ function handleResult(server,res){
     server.child.kill('SIGTERM');
     server.close();
   }else if(data instanceof Array){
-    fs.writeFile( `./coverage/coverage-${rand.unique()}.json`,
-                  JSON.stringify(data[1]),function(){});
+    if(data[1]) fs.writeFile(
+      `./coverage/coverage-${rand.unique()}.json`,JSON.stringify(data[1]),function(){}
+    );
+
     print(data[0]);
   }else if(typeof data == 'string') console.log(data);
 

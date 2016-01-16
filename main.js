@@ -137,7 +137,7 @@ module.exports = test = walk.wrap(function*(info,generator,args,thisArg){
       xhr.onload = notifyRemote;
       xhr.open('POST',__U_TEST_REMOTE__,true);
       xhr.setRequestHeader('Content-Type','application/json');
-      xhr.send(JSON.stringify([node,__coverage__]));
+      xhr.send(JSON.stringify([node,window.__coverage__]));
     }
 
     print(node);

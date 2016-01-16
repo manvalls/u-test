@@ -80,7 +80,7 @@ function handleResult(server,res){
 
   if(data == 0){
     working = false;
-    server.child.kill('SIGTERM');
+    setTimeout(killIt,200,server.child);
     server.close();
   }else if(data instanceof Array){
     if(data[1]) fs.writeFile(
@@ -92,6 +92,10 @@ function handleResult(server,res){
 
   res.setHeader('content-type','text/plain');
   res.end();
+}
+
+function killIt(child){
+  child.kill('SIGTERM');
 }
 
 function onceClosed(){

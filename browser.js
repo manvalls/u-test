@@ -77,6 +77,8 @@ function onRequest(req,res){
       else res.end();
       break;
     case '/result':
+      res.setHeader('content-type','text/plain');
+      res.setHeader('access-control-allow-origin','*');
       Yielded.get(req).listen(handleResult,[this,res]);
       break;
   }
@@ -101,7 +103,6 @@ function handleResult(server,res){
     print(data[0]);
   }else if(typeof data == 'string') console.log(data);
 
-  res.setHeader('content-type','text/plain');
   res.end();
 }
 

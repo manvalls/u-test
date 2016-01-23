@@ -38,7 +38,7 @@ module.exports = function(file,command){
   server.once('listening',bindChild);
   server.listen(0);
 
-  return server.resolver;
+  return server.resolver.yielded;
 };
 
 function bindChild(){

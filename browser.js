@@ -1,6 +1,7 @@
 var browserify = require('browserify'),
     istanbulTF = require('browserify-istanbul'),
-    Yielded = require('y-resolver').Yielded,
+    Resolver = require('y-resolver'),
+    Yielded = Resolver.Yielded,
     rand = require('u-rand'),
     http = require('http'),
     cp = require('child_process'),
@@ -13,34 +14,43 @@ var browserify = require('browserify'),
     queue = [];
 
 module.exports = function(file,command){
-  var br = browserify(),
-      server = http.createServer();
+  var server,br;
 
   if(working){
-    queue.push(file);
+    queue.push([file,command]);
     return;
   }
 
   working = true;
-  br.transform(istanbulTF);
-  br.add(file);
+  server = http.createServer();
+  server.resolver = new Resolver();
 
-  server.br = br;
+  if(/^https?:\/\//.test(file)/) server.url = file;
+  else{
+    br = browserify();
+    br.transform(istanbulTF);
+    br.add(file);
+    server.br = br;
+  }
+
   server.command = command;
   server.on('request',onRequest);
   server.once('listening',bindChild);
   server.listen(0);
+
+  return server.resolver;
 };
 
 function bindChild(){
+  this.resolver.accept(`http://127.0.0.1:${this.address().port}/result`);
 
   if(!this.command) this.child = cp.spawn('google-chrome',[
     `--user-data-dir=${path.resolve(os.tmpDir(),rand.unique())}`,
     '--no-first-run',
-    `http://127.0.0.1:${this.address().port}/`
+    this.url || `http://127.0.0.1:${this.address().port}/`
   ]);
 
-  else this.child = cp.spawn(this.command,[`http://127.0.0.1:${this.address().port}/`]);
+  else this.child = cp.spawn(this.command,[this.url || `http://127.0.0.1:${this.address().port}/`]);
   this.child.on('close',onceClosed);
 }
 
@@ -63,7 +73,8 @@ function onRequest(req,res){
       break;
     case '/script.js':
       res.setHeader('content-type','application/javascript;charset=utf-8');
-      this.br.bundle().pipe(res);
+      if(this.br) this.br.bundle().pipe(res);
+      else res.end();
       break;
     case '/result':
       Yielded.get(req).listen(handleResult,[this,res]);
@@ -99,5 +110,5 @@ function killIt(child){
 }
 
 function onceClosed(){
-  if(queue.length) module.exports(queue.shift());
+  if(queue.length) module.exports(...queue.shift());
 }

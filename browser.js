@@ -25,7 +25,7 @@ module.exports = function(file,command){
   server = http.createServer();
   server.resolver = new Resolver();
 
-  if(/^https?:\/\//.test(file)/) server.url = file;
+  if(/^https?:\/\//.test(file)) server.url = file;
   else{
     br = browserify();
     br.transform(istanbulTF);

@@ -8,13 +8,14 @@ var browserify = require('browserify'),
     fs = require('fs'),
     os = require('os'),
     path = require('path'),
+    Hsm = require('hsm'),
 
     print = require('./main/print.js'),
     working = false,
     queue = [];
 
 module.exports = function(file,command){
-  var server,br;
+  var server,br,hsm;
 
   if(working){
     queue.push([file,command]);
@@ -23,7 +24,9 @@ module.exports = function(file,command){
 
   working = true;
   server = http.createServer();
+  hsm = new Hsm(server);
   server.resolver = new Resolver();
+  server.command = command;
 
   if(/^https?:\/\//.test(file)) server.url = file;
   else{
@@ -33,8 +36,11 @@ module.exports = function(file,command){
     server.br = br;
   }
 
-  server.command = command;
-  server.on('request',onRequest);
+  hsm.allowOrigin(/./);
+  hsm.on('GET /',serveHTML);
+  hsm.on('POST /result',printResult);
+  hsm.on('GET /script.js',sendScript);
+
   server.once('listening',bindChild);
   server.listen(0);
 
@@ -54,47 +60,33 @@ function bindChild(){
   this.child.on('close',onceClosed);
 }
 
-function onRequest(req,res){
-
-  switch(req.url){
-    case '/':
-      res.setHeader('content-type','text/html;charset=utf-8');
-      res.end(`
-      <!DOCTYPE HTML>
-      <html>
-      <head>
-      </head>
-      <body>
-      <script>__U_TEST_REMOTE__='http://127.0.0.1:${this.address().port}/result';</script>
-      <script src="/script.js"></script>
-      </body>
-      </html>
-      `);
-      break;
-    case '/script.js':
-      res.setHeader('content-type','application/javascript;charset=utf-8');
-      if(this.br) this.br.bundle().pipe(res);
-      else res.end();
-      break;
-    case '/result':
-      res.setHeader('content-type','text/plain');
-      res.setHeader('access-control-allow-origin','*');
-      Yielded.get(req).listen(handleResult,[this,res]);
-      break;
-  }
-
+function* serveHTML(e){
+  yield e.take();
+  e.response.setHeader('content-type','text/html;charset=utf-8');
+  e.response.end(`
+  <!DOCTYPE HTML>
+  <html>
+  <head>
+  </head>
+  <body>
+  <script>__U_TEST_REMOTE__='http://127.0.0.1:${this.server.address().port}/result';</script>
+  <script src="/script.js"></script>
+  </body>
+  </html>
+  `);
 }
 
-function handleResult(server,res){
+function* printResult(e){
   var data;
 
-  if(this.rejected) return;
-  data = JSON.parse(this.value);
+  yield e.take();
+  e.response.setHeader('content-type','text/plain');
+  data = JSON.parse(yield e.request);
 
   if(data == 0){
     working = false;
-    setTimeout(killIt,200,server.child);
-    server.close();
+    setTimeout(killIt,200,this.server.child);
+    this.server.close();
   }else if(data instanceof Array){
     if(data[1]) fs.writeFile(
       `./coverage/coverage-${rand.unique()}.json`,JSON.stringify(data[1]),function(){}
@@ -103,7 +95,14 @@ function handleResult(server,res){
     print(data[0]);
   }else if(typeof data == 'string') console.log(data);
 
-  res.end();
+  e.response.end();
+}
+
+function* sendScript(e){
+  yield e.take();
+  e.response.setHeader('content-type','application/javascript;charset=utf-8');
+  if(this.server.br) this.server.br.bundle().pipe(e.response);
+  else e.response.end();
 }
 
 function killIt(child){

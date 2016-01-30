@@ -1,10 +1,12 @@
 var _default = require('./print/default.js'),
     tap = require('./print/tap.js'),
+    junit = require('./print/junit.js'),
 
     process = global.process,
     trees = [],
 
-    endTO,options,container,subcontainer,test;
+    endTO,options,container,
+    subcontainer,test,printer,old;
 
 if(process){
   options = {
@@ -16,8 +18,12 @@ if(process){
     indicator: process.env.indicator || process.env.i || 'tick'
   };
 
-  if(process.env.tap == '') process.stdout.write(tap.before(options));
-  else process.stdout.write(_default.before(options));
+  if(process.env.CIRCLE_TEST_REPORTS) printer = require('./print/circle.js');
+  else if(process.env.tap == '') printer = tap;
+  else if(process.env.junit == '') printer = junit;
+  else printer = _default;
+
+  process.stdout.write(printer.before(options));
 }else (function(){
   var errorsButton,
       detailsButton,
@@ -104,10 +110,8 @@ function showHTML(){
 
 function checkEnd(){
   if(!test.running){
-    if(process){
-      if(process.env.tap == '') process.stdout.write(tap.after(options));
-      else process.stdout.write(_default.after(options));
-    }else{
+    if(process) process.stdout.write(printer.after(options));
+    else{
       console.log(tap.after({syntax: 'console'}).replace(/\n$/,'') + '\n');
     }
   }
@@ -119,10 +123,8 @@ module.exports = function(tree){
   clearTimeout(endTO);
   endTO = setTimeout(checkEnd);
 
-  if(process){
-    if(process.env.tap == '') process.stdout.write(tap(tree,options));
-    else process.stdout.write(_default(tree,options));
-  }else{
+  if(process) process.stdout.write(printer(tree,options));
+  else{
     console.log(tap(tree,{syntax: 'console'}).replace(/\n$/,''));
     trees.push(tree);
     showHTML();

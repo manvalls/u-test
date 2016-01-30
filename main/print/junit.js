@@ -21,17 +21,17 @@ module.exports.after = function(options){
 
     t += (tree.t1 - tree.t0) / 1000;
 
-    if(!tree.error) ret += `  <testcase classname="application" name="${tree.info.replace('"','\\"')}" time="${(tree.t1 - tree.t0)/1000}" />${syntax.getNL(options.syntax)}`;
+    if(!tree.error) ret += `  <testcase classname="application" name="${tree.info.replace(/&/g,'&amp;').replace(/"/g,'\\"')}" time="${(tree.t1 - tree.t0)/1000}" />${syntax.getNL(options.syntax)}`;
     else{
       if(tree.error.name == 'AssertionError'){
         failures++;
-        ret += `  <testcase classname="application" name="${tree.info.replace('"','\\"')}" time="${(tree.t1 - tree.t0)/1000}">${syntax.getNL(options.syntax)}`;
-        ret += `    <failure message="${tree.error.message.replace('"','\\"')}">${tree.error.stack.replace('<','&lt;').replace('>','&gt;')}</failure>${syntax.getNL(options.syntax)}`;
+        ret += `  <testcase classname="application" name="${tree.info.replace(/&/g,'&amp;').replace(/"/g,'\\"')}" time="${(tree.t1 - tree.t0)/1000}">${syntax.getNL(options.syntax)}`;
+        ret += `    <failure message="${tree.error.message.replace(/&/g,'&amp;').replace(/"/g,'\\"')}">${tree.error.stack.replace(/&/g,'&amp;').replace('<','&lt;').replace('>','&gt;')}</failure>${syntax.getNL(options.syntax)}`;
         ret += `  </testcase>${syntax.getNL(options.syntax)}`;
       }else{
         errors++;
-        ret += `  <testcase classname="application" name="${tree.info.replace('"','\\"')}" time="${(tree.t1 - tree.t0)/1000}">${syntax.getNL(options.syntax)}`;
-        ret += `    <error message="${tree.error.message.replace('"','\\"')}">${tree.error.stack.replace('<','&lt;').replace('>','&gt;')}</error>${syntax.getNL(options.syntax)}`
+        ret += `  <testcase classname="application" name="${tree.info.replace(/&/g,'&amp;').replace(/"/g,'\\"')}" time="${(tree.t1 - tree.t0)/1000}">${syntax.getNL(options.syntax)}`;
+        ret += `    <error message="${tree.error.message.replace(/&/g,'&amp;').replace(/"/g,'\\"')}">${tree.error.stack.replace(/&/g,'&amp;').replace('<','&lt;').replace('>','&gt;')}</error>${syntax.getNL(options.syntax)}`
         ret += `  </testcase>${syntax.getNL(options.syntax)}`;
       }
     }

@@ -84,19 +84,21 @@ function* printResult(e){
   e.response.setHeader('content-type','text/plain');
   data = JSON.parse(yield e.request);
 
-  if(data == 0){
+  if('finish' in e.query){
+
+    if(data) fs.writeFile(
+      `./coverage/coverage-${rand.unique()}.json`,JSON.stringify(data),function(){}
+    );
+
     working = false;
     setTimeout(killIt,200,this.server.child);
     this.server.close();
-  }else if(data instanceof Array){
-    if(data[1]) fs.writeFile(
-      `./coverage/coverage-${rand.unique()}.json`,JSON.stringify(data[1]),function(){}
-    );
-
-    print(data[0]);
-    if(data[0].error) code = 1;
   }else if(typeof data == 'string') console.log(data);
-
+  else{
+    print(data);
+    if(data.error) code = 1;
+  }
+  
   e.response.end();
 }
 

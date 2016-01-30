@@ -140,7 +140,7 @@ module.exports = test = walk.wrap(function*(info,generator,args,thisArg){
       xhr.onload = notifyRemote;
       xhr.open('POST',__U_TEST_REMOTE__,true);
       xhr.setRequestHeader('Content-Type','application/json');
-      xhr.send(JSON.stringify([node,window.__coverage__]));
+      xhr.send(JSON.stringify(node));
     }
 
     print(node);
@@ -175,11 +175,12 @@ Object.defineProperty(Error.prototype,'toJSON',{
 });
 
 function notifyRemote(){
-  __U_TEST_REMAINING__--;
-  xhr = new XMLHttpRequest();
-  xhr.open('POST',__U_TEST_REMOTE__,true);
-  xhr.setRequestHeader('Content-Type','application/json');
-  xhr.send(__U_TEST_REMAINING__ + '');
+  if(!--__U_TEST_REMAINING__){
+    xhr = new XMLHttpRequest();
+    xhr.open('POST',__U_TEST_REMOTE__ + '?finish',true);
+    xhr.setRequestHeader('Content-Type','application/json');
+    xhr.send(JSON.stringify(window.__coverage__));
+  }
 }
 
 function resolveDone(){

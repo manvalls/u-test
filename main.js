@@ -206,5 +206,5 @@ if(process) process.on('beforeExit',function(){
     print.check();
   }
 
-  process.exit(code);
+  if(code) process.exit(code);
 });

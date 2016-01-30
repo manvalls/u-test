@@ -12,7 +12,8 @@ var browserify = require('browserify'),
 
     print = require('./main/print.js'),
     working = false,
-    queue = [];
+    queue = [],
+    code = 0;
 
 module.exports = function(file,command){
   var server,br,hsm;
@@ -93,6 +94,7 @@ function* printResult(e){
     );
 
     print(data[0]);
+    if(data[0].error) code = 1;
   }else if(typeof data == 'string') console.log(data);
 
   e.response.end();
@@ -112,3 +114,7 @@ function killIt(child){
 function onceClosed(){
   if(queue.length) module.exports(...queue.shift());
 }
+
+process.on('beforeExit',function(){
+  if(code) process.exit(code);
+});

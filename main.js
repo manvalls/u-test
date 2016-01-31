@@ -179,7 +179,7 @@ function notifyRemote(){
     xhr = new XMLHttpRequest();
     xhr.open('POST',__U_TEST_REMOTE__ + '?finish',true);
     xhr.setRequestHeader('Content-Type','application/json');
-    xhr.send(JSON.stringify(window.__coverage__));
+    xhr.send(JSON.stringify(window.__coverage__ || null));
   }
 }
 

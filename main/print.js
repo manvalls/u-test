@@ -24,6 +24,11 @@ if(process){
   else printer = _default;
 
   process.stdout.write(printer.before(options));
+  
+  process.on('exit',function(){
+    process.stdout.write(printer.after(options));
+  });
+
 }else (function(){
   var errorsButton,
       detailsButton,
@@ -109,12 +114,7 @@ function showHTML(){
 
 
 function checkEnd(){
-  if(!test.running){
-    if(process) process.stdout.write(printer.after(options));
-    else{
-      console.log(tap.after({syntax: 'console'}).replace(/\n$/,'') + '\n');
-    }
-  }
+  if(!(process || test.running)) console.log(tap.after({syntax: 'console'}).replace(/\n$/,'') + '\n');
 }
 
 module.exports = function(tree){

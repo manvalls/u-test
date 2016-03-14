@@ -6,14 +6,14 @@
   "bin": "bin.js",
   "dependencies": {
     "browserify": "^13.0.0",
-    "browserify-istanbul": "^0.2.1",
-    "coveralls": "^2.11.6",
-    "hsm": "^12.1.0",
+    "browserify-istanbul": "^1.0.0",
+    "coveralls": "^2.11.8",
+    "hsm": "^13.2.1",
     "istanbul": "^0.4.2",
-    "u-rand": "^1.1.1",
+    "u-rand": "^1.1.2",
     "y-callback": "^1.2.2",
-    "y-emitter": "^12.4.0",
-    "y-resolver": "^9.1.5",
+    "y-emitter": "^12.4.1",
+    "y-resolver": "^9.2.1",
     "y-walk": "^10.0.3"
   },
   "repository": {

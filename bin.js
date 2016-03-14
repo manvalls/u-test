@@ -28,7 +28,7 @@ function exec(command,opt){
 testDir = walk.wrap(function*(files,folder){
   var file,p;
 
-  for(file of files){
+  for(file of files.sort()){
     p = path.resolve(folder,file);
     if(fs.statSync(p).isDirectory()) yield testDir(fs.readdirSync(p),p);
     else{

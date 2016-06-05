@@ -175,12 +175,15 @@ Object.defineProperty(Error.prototype,'toJSON',{
 });
 
 function notifyRemote(){
+  var xhr;
+
   if(!--__U_TEST_REMAINING__){
     xhr = new XMLHttpRequest();
     xhr.open('POST',__U_TEST_REMOTE__ + '?finish',true);
     xhr.setRequestHeader('Content-Type','application/json');
     xhr.send(JSON.stringify(window.__coverage__ || null));
   }
+  
 }
 
 function resolveDone(){

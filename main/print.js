@@ -24,7 +24,7 @@ if(process){
   else printer = _default;
 
   process.stdout.write(printer.before(options));
-  
+
   process.on('exit',function(){
     process.stdout.write(printer.after(options));
   });
@@ -103,6 +103,7 @@ if(process){
 })();
 
 function showHTML(){
+  var i;
   subcontainer.innerHTML = _default.before(options);
 
   for(i = 0;i < trees.length;i++){

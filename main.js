@@ -1,10 +1,11 @@
 var walk = require('y-walk'),
     Resolver = require('y-resolver'),
     Emitter = require('y-emitter'),
+    getTime = require('./main/getTime.js'),
 
     print,
+    console = global.console,
     process = global.process,
-    performance = global.performance,
     code = 0,
     pending = [],
     done = new Resolver(),
@@ -59,19 +60,6 @@ Node.prototype.resolve = function(error){
 
 Node.prototype.toString = function(){
   return this.info;
-}
-
-function getTime(){
-  var now;
-
-  if(process){
-    now = process.hrtime();
-    return now[0] * 1e3 + now[1] * 1e-6;
-  }
-
-  if(performance) return performance.now();
-
-  return Date.now();
 }
 
 Node.prototype.start = function(){
@@ -183,7 +171,7 @@ function notifyRemote(){
     xhr.setRequestHeader('Content-Type','application/json');
     xhr.send(JSON.stringify(window.__coverage__ || null));
   }
-  
+
 }
 
 function resolveDone(){
@@ -191,6 +179,7 @@ function resolveDone(){
 }
 
 print = require('./main/print.js');
+global.console = require('./main/console.js');
 
 Object.defineProperty(test,'running',{get: function(){
   return pending.length > 0;

@@ -3,6 +3,7 @@ var _default = require('./print/default.js'),
     junit = require('./print/junit.js'),
 
     process = global.process,
+    console = global.console,
     trees = [],
 
     endTO,options,container,

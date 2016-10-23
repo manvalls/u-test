@@ -84,7 +84,11 @@ function* printResult(e){
   e.response.setHeader('content-type','text/plain');
   data = JSON.parse(yield e.request);
 
-  if('finish' in e.query){
+  if('error' in e.query){
+    e.response.end();
+    this.server.child.kill();
+    throw data;
+  }if('finish' in e.query){
 
     if(data) fs.writeFile(
       `./coverage/coverage-${rand.unique()}.json`,JSON.stringify(data),function(){}
@@ -98,7 +102,7 @@ function* printResult(e){
     print(data);
     if(data.error) code = 1;
   }
-  
+
   e.response.end();
 }
 

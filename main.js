@@ -6,9 +6,11 @@ var walk = require('y-walk'),
     print,
     console = global.console,
     process = global.process,
+    window = global.window,
     code = 0,
     pending = [],
     done = new Resolver(),
+    remoteQueue = [],
     test;
 
 global.__U_TEST_REMAINING__ = 0;
@@ -124,11 +126,8 @@ module.exports = test = walk.wrap(function*(info,generator,args,thisArg){
   if(!node.parent){
 
     if(global.__U_TEST_REMOTE__ && global.XMLHttpRequest){
-      xhr = new XMLHttpRequest();
-      xhr.onload = notifyRemote;
-      xhr.open('POST',__U_TEST_REMOTE__,true);
-      xhr.setRequestHeader('Content-Type','application/json');
-      xhr.send(JSON.stringify(node));
+      queueRemote(node);
+      notifyRemote();
     }
 
     print(node);
@@ -142,12 +141,7 @@ test.done = done.yielded;
 test.log = function(str){
   str = '# ' + str.replace(/\n/g,'\n# ');
   console.log(str);
-  if(global.__U_TEST_REMOTE__ && global.XMLHttpRequest){
-    xhr = new XMLHttpRequest();
-    xhr.open('POST',__U_TEST_REMOTE__,true);
-    xhr.setRequestHeader('Content-Type','application/json');
-    xhr.send(JSON.stringify(str));
-  }
+  if(global.__U_TEST_REMOTE__ && global.XMLHttpRequest) queueRemote(str);
 };
 
 Object.defineProperty(Error.prototype,'toJSON',{
@@ -164,14 +158,35 @@ Object.defineProperty(Error.prototype,'toJSON',{
 
 function notifyRemote(){
   var xhr;
+  if(!--__U_TEST_REMAINING__) queueRemote(window.__coverage__ || null,'finish');
+}
 
-  if(!--__U_TEST_REMAINING__){
-    xhr = new XMLHttpRequest();
-    xhr.open('POST',__U_TEST_REMOTE__ + '?finish',true);
-    xhr.setRequestHeader('Content-Type','application/json');
-    xhr.send(JSON.stringify(window.__coverage__ || null));
+function queueRemote(content,query){
+  var url = __U_TEST_REMOTE__;
+
+  if(query) url += '?' + query;
+  content = JSON.stringify(content);
+
+  if(remoteQueue.length) remoteQueue.splice(-1,0,[content,url]);
+  else{
+    remoteQueue.push([content,url],null);
+    popQueue();
   }
 
+}
+
+function popQueue(){
+  var task = remoteQueue.shift(),
+      content,url,xhr;
+
+  if(!task) return;
+  [content,url] = task;
+
+  xhr = new XMLHttpRequest();
+  xhr.onload = popQueue;
+  xhr.open('POST',url,true);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.send(content);
 }
 
 function resolveDone(){
@@ -184,6 +199,10 @@ global.console = require('./main/console.js');
 Object.defineProperty(test,'running',{get: function(){
   return pending.length > 0;
 }});
+
+if(window) window.addEventListener('error',function(e){
+  queueRemote(e.error || e.message,'error');
+},false);
 
 if(process) process.on('beforeExit',function(){
   var i,p;

@@ -11,7 +11,7 @@ var walk = require('y-walk'),
     pending = [],
     done = new Resolver(),
     remoteQueue = [],
-    test;
+    lastTimeout,test;
 
 global.__U_TEST_REMAINING__ = 0;
 
@@ -127,7 +127,9 @@ module.exports = test = walk.wrap(function*(info,generator,args,thisArg){
 
     if(global.__U_TEST_REMOTE__ && global.XMLHttpRequest){
       queueRemote(node);
-      notifyRemote();
+      __U_TEST_REMAINING__--;
+      clearTimeout(lastTimeout);
+      lastTimeout = setTimeout(notifyRemote,100);
     }
 
     print(node);
@@ -158,7 +160,7 @@ Object.defineProperty(Error.prototype,'toJSON',{
 
 function notifyRemote(){
   var xhr;
-  if(!--__U_TEST_REMAINING__) queueRemote(window.__coverage__ || null,'finish');
+  if(!__U_TEST_REMAINING__) queueRemote(window.__coverage__ || null,'finish');
 }
 
 function queueRemote(content,query){

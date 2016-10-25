@@ -18,6 +18,8 @@ var browserify = require('browserify'),
 module.exports = function(file,command){
   var server,br,hsm;
 
+  command = command || process.env.TEST_BROWSER;
+
   if(working){
     queue.push([file,command]);
     return;
@@ -51,7 +53,7 @@ module.exports = function(file,command){
 function bindChild(){
   this.resolver.accept(`http://127.0.0.1:${this.address().port}/result`);
 
-  if(!this.command) this.child = cp.spawn('google-chrome',[
+  if(!this.command || this.command.match(/chrome/)) this.child = cp.spawn(this.command || 'google-chrome',[
     `--user-data-dir=${path.resolve(os.tmpDir(),rand.unique())}`,
     '--no-first-run',
     this.url || `http://127.0.0.1:${this.address().port}/`

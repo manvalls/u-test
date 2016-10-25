@@ -38,7 +38,7 @@ testDir = walk.wrap(function*(files,folder){
       catch(e){ exitCode = 1; }
 
       if(file.match(/\.br.*\.js$/))
-      try{ yield exec(`"${browser}" "${p}"`); }
+      try{ yield exec(`node "${browser}" "${p}"`); }
       catch(e){ exitCode = 1; }
 
     }

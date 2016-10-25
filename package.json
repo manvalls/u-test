@@ -1,6 +1,6 @@
 {
   "name": "u-test",
-  "version": "3.8.5",
+  "version": "3.8.6",
   "description": "Testing framework",
   "main": "main.js",
   "bin": "bin.js",

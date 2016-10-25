@@ -34,7 +34,7 @@ testDir = walk.wrap(function*(files,folder){
     else{
 
       if(file.match(/\.nd.*\.js$/))
-      try{ yield exec(`"${istanbul}" cover "${p}" --report none --print none --include-pid`); }
+      try{ yield exec(`node "${istanbul}" cover "${p}" --report none --print none --include-pid`); }
       catch(e){ exitCode = 1; }
 
       if(file.match(/\.br.*\.js$/))
@@ -66,7 +66,7 @@ walk(function*(){
   yield cb;
 
   yield testDir(fs.readdirSync('./test/'),'./test/');
-  yield exec(`"${istanbul}" report --root ./coverage/ text-summary lcov --color`);
+  yield exec(`node "${istanbul}" report --root ./coverage/ text-summary lcov --color`);
 
   if(process.env.COVERALLS_REPO_TOKEN){
     coverallsHandleInput(fs.readFileSync('./coverage/lcov.info').toString(),cb = Cb());

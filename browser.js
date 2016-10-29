@@ -54,7 +54,7 @@ function bindChild(){
   this.resolver.accept(`http://127.0.0.1:${this.address().port}/result`);
 
   if(!this.command || this.command.match(/chrome/)) this.child = cp.spawn(this.command || 'google-chrome',[
-    `--user-data-dir=${path.resolve(os.tmpDir(),rand.unique())}`,
+    `--user-data-dir=${path.resolve(os.tmpdir(),rand.unique())}`,
     '--no-first-run',
     this.url || `http://127.0.0.1:${this.address().port}/`
   ]);
